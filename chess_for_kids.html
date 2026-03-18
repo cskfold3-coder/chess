@@ -392,7 +392,7 @@
             .message-board {
                 font-size: 1.2rem;
             }
-            
+
             .lesson-btn {
                 width: 100%;
             }
@@ -501,7 +501,7 @@
             font-size: 1.5rem;
             width: 40px;
         }
-        
+
         .lesson-title {
             flex-grow: 1;
             text-align: left;
@@ -772,7 +772,11 @@
         let gameOver = false;
         let validMovesForSelected = [];
         let wrongMoveCount = 0;
-        
+
+        // Cheat State
+        let cheatUnlocked = false;
+        let cheatBuffer = '';
+
         // Lessons State
         let activeLesson = null;
         let lessonTimer = null;
@@ -922,7 +926,7 @@
                 voices = window.speechSynthesis.getVoices();
                 const currentVal = voiceSelect.value;
                 voiceSelect.innerHTML = '<option value="">Default Voice 🗣️</option>';
-                
+
                 voices.filter(v => v.lang.startsWith('en')).forEach(v => {
                     const opt = document.createElement('option');
                     opt.value = v.name;
@@ -943,7 +947,7 @@
                 const voiceSelect = document.getElementById('voice-select');
                 if (clearQueue) window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
-                
+
                 // Voice selection
                 if (voiceSelect && voiceSelect.value) {
                     const selectedVoice = voices.find(v => v.name === voiceSelect.value);
@@ -966,12 +970,12 @@
                     utterance.pitch = 1.4; // High and happy
                 } else if (lowerText.includes('captured') || lowerText.includes('oops') || lowerText.includes('safe')) {
                     utterance.rate = 0.85; // Serious/Informative
-                    utterance.pitch = 1.0; 
+                    utterance.pitch = 1.0;
                 } else if (lowerText.includes('hint') || lowerText.includes('look') || lowerText.includes('try')) {
                     utterance.rate = 0.8; // Slow and helpful
                     utterance.pitch = 1.2;
                 }
-                
+
                 window.speechSynthesis.speak(utterance);
             }
         }
@@ -991,7 +995,7 @@
             ['w_p', 'w_p', 'w_p', 'w_p', 'w_p', 'w_p', 'w_p', 'w_p'],
             ['w_r', 'w_n', 'w_b', 'w_q', 'w_k', 'w_b', 'w_n', 'w_r']
         ];
-        
+
         // Lessons Definitions
         const ALL_LESSONS = [
     {
@@ -12985,7 +12989,7 @@
             clearMoveLog();
             renderBoard();
         }
-        
+
         // Lessons Functions
         const LESSON_SECTIONS = [
             { name: 'The Basics 🐣', start: 0, end: 31, icon: '🐣' },
@@ -12997,7 +13001,7 @@
             const container = document.getElementById('lesson-list-container');
             container.innerHTML = '';
             const completed = getCompletedLessons();
-            
+
             // Find the first uncompleted lesson index to auto-scroll
             let firstUncompletedIdx = ALL_LESSONS.findIndex(l => !completed.includes(l.id));
             if (firstUncompletedIdx === -1) firstUncompletedIdx = 0;
@@ -13018,7 +13022,7 @@
                 const progressOuter = document.createElement('div');
                 progressOuter.className = 'progress-bar-outer';
                 progressOuter.innerHTML = `<div class="progress-bar-inner" style="width:${pct}%"></div>`;
-                
+
                 // Section body
                 const body = document.createElement('div');
                 body.className = 'lesson-section-body';
@@ -13037,13 +13041,13 @@
                     const globalIdx = section.start + i;
                     const isCompleted = completed.includes(lesson.id);
                     // Lesson is unlocked if it's the first, or the previous is completed
-                    const isUnlocked = globalIdx === 0 || completed.includes(ALL_LESSONS[globalIdx - 1].id) || isCompleted;
-                    
+                    const isUnlocked = cheatUnlocked || globalIdx === 0 || completed.includes(ALL_LESSONS[globalIdx - 1].id) || isCompleted;
+
                     const btn = document.createElement('button');
                     btn.className = 'lesson-btn';
                     if (isCompleted) btn.classList.add('completed');
                     if (!isUnlocked) btn.classList.add('locked');
-                    
+
                     const statusIcon = isCompleted ? '✅' : (isUnlocked ? '▶️' : '🔒');
                     btn.innerHTML = `
                         <div class="lesson-icon">${lesson.icon}</div>
@@ -13053,7 +13057,7 @@
                         </div>
                         <div style="font-size: 1.5rem;">${statusIcon}</div>
                     `;
-                    
+
                     if (isUnlocked) {
                         btn.onclick = () => startLesson(lesson);
                     } else {
@@ -13066,10 +13070,10 @@
                 container.appendChild(progressOuter);
                 container.appendChild(body);
             });
-            
+
             document.getElementById('lessons-menu').classList.add('show');
             speak("Choose a lesson to learn!");
-            
+
             // Auto-scroll to current/next lesson
             setTimeout(() => {
                 const firstLocked = container.querySelector('.lesson-btn:not(.completed):not(.locked)');
@@ -13081,12 +13085,12 @@
             document.getElementById('lessons-menu').classList.remove('show');
             window.speechSynthesis.cancel();
         }
-        
+
         function startLesson(lesson) {
             closeLessonsMenu();
             activeLesson = lesson;
             wrongMoveCount = 0;
-            
+
             boardState = lesson.board.map(row => [...row]);
             moveHistory = [];
             currentPlayer = 'w';
@@ -13095,18 +13099,18 @@
             gameOver = false;
             coachMode = true;
             botMode = false;
-            
+
             coachBtn.innerText = "Coach: ON 🦉";
             coachBtn.classList.add('active');
-            
+
             const botLessons = ['CHECKMATE', 'DELIVER_CHECK', 'ESCAPE_CHECK', 'AVOID_CAPTURE'];
             botMode = botLessons.includes(lesson.goalType);
-            
+
             botBtn.style.display = 'none';
             twoPlayerBtn.style.display = 'none';
             exitLessonBtn.style.display = 'inline-block';
             updateUndoButton();
-            
+
             lessonInfoElement.style.display = 'block';
             lessonInfoElement.innerHTML = `<h3>${lesson.icon} ${lesson.title}</h3><p>${lesson.desc}</p>`;
 
@@ -13139,7 +13143,7 @@
             // Save progress
             saveProgress(activeLesson.id);
             checkBadges();
-            
+
             const currentIndex = ALL_LESSONS.findIndex(l => l.id === activeLesson.id);
             if (currentIndex >= 0 && currentIndex < ALL_LESSONS.length - 1) {
                 messageElement.classList.remove('celebrate');
@@ -13279,7 +13283,7 @@
                     // Normal capture
                     if (destL && getPieceColor(destL) !== color) moves.push({ r: r + dir, c: c - 1, isCapture: true });
                     if (destR && getPieceColor(destR) !== color) moves.push({ r: r + dir, c: c + 1, isCapture: true });
-                    
+
                     // En Passant: only allowed during EN_PASSANT lessons
                     if (activeLesson && activeLesson.goalType === 'EN_PASSANT') {
                         const epRow = color === 'w' ? 3 : 4;
@@ -13315,7 +13319,7 @@
             }
             else if (type === 'k') {
                 [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([dr, dc]) => addMoveIfValid(r + dr, c + dc));
-                
+
                 // --- Castling ---
                 const homeRow = color === 'w' ? 7 : 0;
                 const enemyColor = color === 'w' ? 'b' : 'w';
@@ -13366,7 +13370,7 @@
                 }
                 if (kingR !== -1) break;
             }
-            
+
             if (kingR === -1) return false; // Edge case if king is captured in lesson setups
             return isSquareAttacked(board, kingR, kingC, kingColor === 'w' ? 'b' : 'w');
         }
@@ -13374,23 +13378,23 @@
         function calculateValidMoves(r, c) {
             const piece = boardState[r][c];
             if (!piece) return [];
-            
+
             const color = getPieceColor(piece);
             const pseudoMoves = getPseudoLegalMoves(boardState, r, c);
             const validMoves = [];
-            
+
             for (const move of pseudoMoves) {
                 // Simulate move to check if king is left in check
                 const tempBoard = boardState.map(row => [...row]);
                 tempBoard[move.r][move.c] = tempBoard[r][c];
                 tempBoard[r][c] = null;
-                
+
                 // Allow the move only if the king is NOT in check after
                 if (!isKingInCheck(tempBoard, color)) {
                     validMoves.push(move);
                 }
             }
-            
+
             return validMoves;
         }
 
@@ -13458,7 +13462,7 @@
                 // Diagonal pawn move to empty square = en passant
                 boardState[fromR][toC] = null; // Remove the captured pawn
                 playSound('capture');
-                
+
                 if (activeLesson && activeLesson.goalType === 'EN_PASSANT') {
                     if (toR === activeLesson.target.r && toC === activeLesson.target.c) {
                         gameOver = true;
@@ -13473,7 +13477,7 @@
                         return;
                     }
                 }
-                
+
                 if (coachMode && currentPlayer === 'w') {
                     const msg = "Sneaky En Passant capture! 👻";
                     updateMessage(msg);
@@ -13492,7 +13496,7 @@
                     boardState[toR][3] = boardState[toR][0];
                     boardState[toR][0] = null;
                 }
-                
+
                 // Check if this is a CASTLE lesson
                 if (activeLesson && activeLesson.goalType === 'CASTLE') {
                     gameOver = true;
@@ -13536,7 +13540,7 @@
 
             if (targetPiece) {
                 playSound('capture');
-                
+
                 // Lesson Capture Logic
                 if (activeLesson && (activeLesson.goalType === 'CAPTURE_SQUARE' || activeLesson.goalType === 'CHOOSE_BEST_CAPTURE')) {
                     if (toR === activeLesson.target.r && toC === activeLesson.target.c) {
@@ -13561,7 +13565,7 @@
                         return;
                     }
                 }
-                
+
                 // Kid friendly: Win by capturing the king!
                 if (getPieceType(targetPiece) === 'k') {
                     gameOver = true;
@@ -13578,7 +13582,7 @@
                 }
             } else {
                 playSound('move');
-                
+
                 // Lesson Target Square Logic
                 if (activeLesson && (activeLesson.goalType === 'REACH_SQUARE' || activeLesson.goalType === 'OPENING_MOVE' || activeLesson.goalType === 'AVOID_CAPTURE')) {
                     if (activeLesson.goalType === 'AVOID_CAPTURE' && isSquareAttacked(boardState, toR, toC, 'b')) {
@@ -13605,7 +13609,7 @@
                         return;
                     }
                 }
-                
+
                 if (coachMode && currentPlayer === 'w') {
                     const msg = activeLesson ? `Great! Next step: ${activeLesson.msg}` : "Great move! Keep going! 🚀";
                     updateMessage(msg);
@@ -13829,7 +13833,7 @@
                     if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
                         square.classList.add('selected');
                     }
-                    
+
                     // Render Lesson Target
                     if (activeLesson && activeLesson.target && activeLesson.target.r === r && activeLesson.target.c === c && !gameOver) {
                         square.classList.add('target-square');
@@ -13861,6 +13865,22 @@
                 }
             }
         }
+
+        // Cheat code logic
+        window.addEventListener('keydown', (e) => {
+            cheatBuffer += e.key;
+            if (cheatBuffer.length > 20) {
+                cheatBuffer = cheatBuffer.substring(cheatBuffer.length - 20);
+            }
+            if (cheatBuffer.endsWith('unlock')) {
+                cheatUnlocked = true;
+                showBadgeToast("Cheat Activated! All lessons unlocked.");
+                // Re-render if lessons menu is currently open
+                if (document.getElementById('lessons-menu').classList.contains('show')) {
+                    openLessonsMenu();
+                }
+            }
+        });
 
         // Start initial setup
         initGame();
