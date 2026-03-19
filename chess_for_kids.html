@@ -773,6 +773,10 @@
         let validMovesForSelected = [];
         let wrongMoveCount = 0;
 
+        // Cheat State
+        let cheatUnlocked = false;
+        let cheatBuffer = '';
+
         // Lessons State
         let activeLesson = null;
         let lessonTimer = null;
@@ -13037,7 +13041,7 @@
                     const globalIdx = section.start + i;
                     const isCompleted = completed.includes(lesson.id);
                     // Lesson is unlocked if it's the first, or the previous is completed
-                    const isUnlocked = true;
+                    const isUnlocked = cheatUnlocked || globalIdx === 0 || completed.includes(ALL_LESSONS[globalIdx - 1].id) || isCompleted;
 
                     const btn = document.createElement('button');
                     btn.className = 'lesson-btn';
@@ -13862,7 +13866,21 @@
             }
         }
 
-
+        // Cheat code logic
+        window.addEventListener('keydown', (e) => {
+            cheatBuffer += e.key;
+            if (cheatBuffer.length > 20) {
+                cheatBuffer = cheatBuffer.substring(cheatBuffer.length - 20);
+            }
+            if (cheatBuffer.endsWith('unlock')) {
+                cheatUnlocked = true;
+                showBadgeToast("Cheat Activated! All lessons unlocked.");
+                // Re-render if lessons menu is currently open
+                if (document.getElementById('lessons-menu').classList.contains('show')) {
+                    openLessonsMenu();
+                }
+            }
+        });
 
         // Start initial setup
         initGame();
