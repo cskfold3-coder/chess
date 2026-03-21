@@ -13259,10 +13259,13 @@
             coachBtn.innerText = "Coach: ON 🦉";
             coachBtn.classList.add('active');
 
-            const botLessons = ['CHECKMATE', 'DELIVER_CHECK', 'ESCAPE_CHECK', 'AVOID_CAPTURE'];
+            const botLessons = ['CHECKMATE', 'DELIVER_CHECK', 'ESCAPE_CHECK', 'AVOID_CAPTURE', 'CHOOSE_BEST_CAPTURE', 'CAPTURE_SQUARE', 'MOVE_TO_TARGET'];
             botMode = botLessons.includes(lesson.goalType);
 
-            botBtn.style.display = 'none';
+            botBtn.style.display = 'inline-block';
+            botBtn.innerText = botMode ? "Play Robot: ON 🤖" : "Play Robot: OFF 🤖";
+            botBtn.classList.toggle('active', botMode);
+            
             twoPlayerBtn.style.display = 'none';
             exitLessonBtn.style.display = 'inline-block';
             updateUndoButton();
@@ -13929,7 +13932,18 @@
                 const target = boardState[m.to.r][m.to.c];
                 return !(target && getPieceType(target) === 'k' && getPieceColor(target) === 'w');
             });
-            const movesToUse = safeMoves.length > 0 ? safeMoves : allMoves;
+            
+            // Smart Puzzle Freeze: Never move the target piece, otherwise the puzzle breaks!
+            const finalMoves = safeMoves.filter(m => {
+                if (activeLesson && activeLesson.target) {
+                    if (m.from.r === activeLesson.target.r && m.from.c === activeLesson.target.c) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            const movesToUse = finalMoves.length > 0 ? finalMoves : safeMoves;
 
             let chosenMove = null;
             const captureMoves = movesToUse.filter(m => m.isCapture);
