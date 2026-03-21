@@ -82,8 +82,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            max-width: 800px;
-            width: 100%;
+            max-width: 1600px;
+            width: 95%;
             background: var(--app-bg);
             padding: 30px;
             border-radius: 30px;
@@ -231,7 +231,7 @@
             grid-template-rows: 1fr 25px;
             gap: 4px;
             width: 100%;
-            max-width: 530px;
+            max-width: calc(100vh - 250px);
         }
         .rank-labels {
             display: flex;
@@ -569,7 +569,7 @@
             flex-direction: column;
             gap: 10px;
             transition: max-height 0.3s ease;
-            max-height: 2000px;
+            max-height: 10000px;
             overflow: hidden;
             margin-bottom: 20px;
         }
@@ -622,6 +622,143 @@
 
         .lesson-title {
             flex-grow: 1;
+        }
+
+        /* Confetti canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Timer display */
+        .timer-display {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--heading-color);
+            margin: 5px 0;
+            display: none;
+        }
+
+        .timer-display.active {
+            display: block;
+        }
+
+        /* Achievement badge toast */
+        .badge-toast {
+            position: fixed;
+            top: 20px;
+            right: -300px;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            z-index: 1000;
+            transition: right 0.5s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .badge-toast.show {
+            right: 20px;
+        }
+
+        /* Hint arrow */
+        .hint-arrow {
+            position: absolute;
+            font-size: 1.8rem;
+            z-index: 20;
+            animation: hintPulse 0.8s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes hintPulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.3); opacity: 1; }
+        }
+
+        /* Move Log Panel */
+        .game-layout {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 100%;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .move-log-panel {
+            background: var(--app-bg);
+            border: 2px solid var(--board-border);
+            border-radius: 15px;
+            padding: 12px;
+            min-width: 160px;
+            max-width: 180px;
+            max-height: 520px;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .move-log-panel h4 {
+            margin: 0 0 8px 0;
+            color: var(--heading-color);
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .move-log-table {
+            width: 100%;
+            font-size: 0.85rem;
+            border-collapse: collapse;
+        }
+
+        .move-log-table th {
+            color: var(--heading-color);
+            font-size: 0.75rem;
+            text-align: center;
+            padding: 2px 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .move-log-table td {
+            padding: 3px 6px;
+            text-align: center;
+            color: var(--text-color);
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .move-log-table tr:nth-child(even) {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .move-log-table .move-num {
+            color: var(--heading-color);
+            opacity: 0.6;
+            font-size: 0.75rem;
+            width: 25px;
+        }
+
+        .move-log-table .latest {
+            color: #facc15;
+            font-weight: 800;
+        }
+
+        @media (max-width: 1000px) {
+            .game-layout {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .move-log-panel {
+                max-width: 100%;
+                min-width: unset;
+                width: 100%;
+                max-height: 150px;
+            }
         }
     </style>
     <script>
